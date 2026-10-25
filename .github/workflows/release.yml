@@ -1,0 +1,55 @@
+# Releases the doc2video package when a version tag (v1.2.3) is pushed:
+#   1. publishes it to npm with trusted publishing (no npm token or security-key prompt;
+#      the package gets a provenance badge linking it to this repo and run), then
+#   2. publishes server.json to the official MCP Registry (GitHub OIDC login).
+#
+# One-time setup on npmjs.com: package doc2video → Settings → Trusted publisher →
+# GitHub Actions: organization "doc2video", repository "cli", workflow "release.yml",
+# environment "npm".
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing + provenance, and the MCP Registry login
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or later
+      - run: npm install -g npm@latest
+
+      - name: Tag, package.json and server.json agree
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          s="$(node -p "require('./server.json').version")"
+          p="$(node -p "require('./server.json').packages[0].version")"
+          if [ "v$v" != "$GITHUB_REF_NAME" ] || [ "$s" != "$v" ] || [ "$p" != "$v" ]; then
+            echo "Versions disagree: tag $GITHUB_REF_NAME, package.json $v, server.json $s / $p"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm test
+      - run: npm publish --provenance --access public
+
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Publish to the MCP Registry
+        run: |
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish

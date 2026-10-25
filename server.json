@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.doc2video/d2v",
+  "title": "doc2video",
+  "description": "Turn documents and photos into narrated AI videos, from Claude, Codex or any MCP client.",
+  "websiteUrl": "https://doc2video.io",
+  "repository": {
+    "url": "https://github.com/doc2video/cli",
+    "source": "github"
+  },
+  "version": "0.2.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "doc2video",
+      "version": "0.2.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "DOC2VIDEO_API_KEY",
+          "description": "Optional API key from doc2video.io/dashboard/api-keys. Without one, the d2v_connect_account tool signs you in through your browser.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

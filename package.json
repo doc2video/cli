@@ -1,0 +1,68 @@
+{
+  "name": "doc2video",
+  "version": "0.2.2",
+  "mcpName": "io.github.doc2video/d2v",
+  "description": "CLI and MCP server for doc2video — turn a folder of documents and photos into an AI-produced video, steered from your terminal or by Claude / ChatGPT Codex.",
+  "keywords": [
+    "doc2video",
+    "video",
+    "ai-video",
+    "ai-video-generator",
+    "video-generation",
+    "text-to-video",
+    "pdf-to-video",
+    "photos-to-video",
+    "narration",
+    "storyboard",
+    "cli",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "claude",
+    "claude-code",
+    "codex",
+    "agent"
+  ],
+  "homepage": "https://doc2video.io",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doc2video/cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/doc2video/cli/issues"
+  },
+  "type": "module",
+  "bin": {
+    "d2v": "dist/index.js",
+    "doc2video": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "agents",
+    "README.md",
+    "API.md"
+  ],
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p .",
+    "dev": "tsc -p . --watch",
+    "typecheck": "tsc -p . --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepack": "npm run build && node -e \"const fs=require('fs');if(fs.existsSync('../docs/API.md'))fs.copyFileSync('../docs/API.md','API.md')\"",
+    "prepublishOnly": "npm test"
+  },
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}
