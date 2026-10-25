@@ -24,6 +24,7 @@
     "agent"
   ],
   "homepage": "https://doc2video.io",
+  "author": "The doc2video team <support@doc2video.io>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/doc2video/cli.git"
