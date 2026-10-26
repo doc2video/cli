@@ -39,7 +39,8 @@ WORKFLOW
 1. Create a project from the user's folder (documents and/or photos):
      d2v create "Name" ./folder --duration 60 --aspect 9:16 --direction "..." --build --wait
    Photos (jpg/png/webp/heic) are shown to the scriptwriter and featured in scenes;
-   documents (pdf/docx/pptx/md/txt/csv/json) supply the story. With no files,
+   documents (pdf/docx/pptx/md/txt/csv/json) supply the story. Public links
+   (https://…/menu.pdf, a photo, a web page) work alongside files. With no files,
    use --draft "description" to have AI write the content.
 2. --build runs the storyboard chain on the server: script → keyframes →
    narration → preview (a watermarked preview video). It takes minutes.

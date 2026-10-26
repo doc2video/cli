@@ -36,14 +36,18 @@ export interface UploadResult {
   warnings: string[];
 }
 
-/** Upload files and folders to a project, a few at a time. */
+/** A public link to add as a source (the server fetches it), rather than a local path. */
+export const isLink = (value: string) => /^https?:\/\//i.test(value.trim());
+
+/** Upload files and folders to a project, a few at a time; http(s) links are added by the server. */
 export async function uploadSources(
   client: Doc2VideoClient,
   projectId: string,
   paths: string[],
-  onProgress?: (file: LocalFile, outcome: "uploaded" | "failed", error?: string) => void,
+  onProgress?: (file: LocalFile | { name: string; path: string }, outcome: "uploaded" | "failed", error?: string) => void,
 ): Promise<UploadResult> {
-  const { files, skipped } = collectFiles(paths);
+  const links = paths.filter(isLink);
+  const { files, skipped } = collectFiles(paths.filter((p) => !isLink(p)));
   const warnings: string[] = [];
   const photoCount = files.filter((f) => f.kind === "photo").length;
   if (photoCount > MAX_PHOTOS) {
@@ -66,12 +70,23 @@ export async function uploadSources(
   };
   await Promise.all(Array.from({ length: Math.min(4, files.length) }, worker));
 
+  for (const url of links) {
+    const item = { name: url, path: url };
+    try {
+      uploaded.push(await client.importUrl(projectId, url.trim()));
+      onProgress?.(item, "uploaded");
+    } catch (err) {
+      failed.push({ path: url, error: (err as Error).message });
+      onProgress?.(item, "failed", (err as Error).message);
+    }
+  }
+
   return { uploaded, failed, skipped, warnings };
 }
 
 /**
- * Turn a photo reference into a scene patch: "none" (back to an AI visual),
- * a document id, a local file (uploaded first), or a project photo's filename.
+ * Turn a photo reference into a scene patch: "none" (back to an AI visual), a document id,
+ * a local file (uploaded first), a public link (added first), or a project photo's filename.
  */
 export async function photoPatch(
   client: Doc2VideoClient,
@@ -82,6 +97,11 @@ export async function photoPatch(
   if (photo === undefined || photo === "") return treatment ? { treatment } : undefined;
   if (photo === null || photo.toLowerCase() === "none") return null;
   if (UUID_RE.test(photo)) return { document_id: photo, treatment };
+  if (isLink(photo)) {
+    const doc = await client.importUrl(projectId, photo.trim());
+    if (doc.kind !== "photo") throw new ApiRequestError(400, "not_a_photo", `${photo} isn't a photo (it was added as a ${doc.kind} source).`);
+    return { document_id: doc.id, treatment };
+  }
   if (existsSync(photo)) {
     const upload = await uploadSources(client, projectId, [photo]);
     const doc = upload.uploaded[0];

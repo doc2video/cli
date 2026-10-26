@@ -149,6 +149,15 @@ export function startMockServer() {
       case route === "POST /projects/:id/documents/upload-url":
         return send(200, { upload_url: `${base}/upload/${encodeURIComponent(body.filename)}`, storage_path: `uploads/u1/${p.id}/${body.filename}`,
           content_type: body.content_type, expires_in_seconds: 3600, method: "PUT" });
+      case route === "POST /projects/:id/documents/from-url": {
+        if (body.url.includes("private")) return fail(422, "url_fetch_failed", "That address isn't on the public internet.");
+        const filename = decodeURIComponent(new URL(body.url).pathname.split("/").pop() || "page");
+        const photo = /\.(jpe?g|png|webp|heic)$/i.test(filename);
+        const doc = { id: randomUUID(), filename, kind: photo ? "photo" : "document", source_type: "upload",
+          mime_type: photo ? "image/jpeg" : "application/pdf", file_size_bytes: 1234, created_at: now() };
+        p.documents.push(doc);
+        return send(201, { document: doc });
+      }
       case route === "POST /projects/:id/documents": {
         const kind = body.content ? "text" : body.content_type.startsWith("image/") ? "photo" : "document";
         const doc = { id: randomUUID(), filename: body.filename ?? "Written Content", kind, source_type: body.content ? "text" : "upload",
@@ -212,6 +221,9 @@ export function startMockServer() {
         if (![500, 1000, 2500].includes(body.amount_cents)) return fail(400, "invalid_request", "Choose one of: $5.00, $10.00, $25.00");
         return send(200, { checkout_url: `${base}/stripe/checkout/${body.amount_cents}`, amount_cents: body.amount_cents });
       case route === "POST /projects/:id/unlock-with-credits":
+        if (body.max_credits_cents !== undefined && body.max_credits_cents < 299) {
+          return fail(402, "credits_confirm_required", "Unlocking costs $2.99 now, more than the amount confirmed.", { cost_cents: 299 });
+        }
         if (state.balanceCents < 299) return fail(402, "credits_required", "Unlocking this project costs $2.99 in credits.");
         state.balanceCents -= 299;
         p.purchased = true;

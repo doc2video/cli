@@ -319,7 +319,7 @@ const COMMANDS: Record<string, Command> = {
   },
 
   create: {
-    usage: "d2v create <name> [files or folders...] [settings] [--text TEXT] [--draft PROMPT] [--build] [--wait]",
+    usage: "d2v create <name> [files, folders or links...] [settings] [--text TEXT] [--draft PROMPT] [--build] [--wait]",
     summary: "Create a project from a folder of documents and/or photos",
     help: `${SETTINGS_HELP}
 
@@ -417,7 +417,7 @@ Example:
   },
 
   add: {
-    usage: "d2v add <project> [files or folders...] [--text TEXT]",
+    usage: "d2v add <project> [files, folders or links...] [--text TEXT]",
     summary: "Upload more documents/photos or add written content",
     options: { text: { type: "string" } },
     async run(ctx) {

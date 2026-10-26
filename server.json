@@ -2,18 +2,27 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.doc2video/d2v",
   "title": "doc2video",
-  "description": "Turn documents and photos into narrated AI videos, from Claude, Codex or any MCP client.",
+  "description": "Turn documents and photos into narrated AI videos from Claude, ChatGPT, Codex or any MCP client.",
   "websiteUrl": "https://doc2video.io",
   "repository": {
     "url": "https://github.com/doc2video/cli",
     "source": "github"
   },
-  "version": "0.2.2",
+  "icons": [
+    {
+      "src": "https://doc2video.io/logo-512.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
+    }
+  ],
+  "version": "0.2.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "doc2video",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "transport": {
         "type": "stdio"
       },
@@ -32,6 +41,12 @@
           "format": "string"
         }
       ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://doc2video.io/mcp"
     }
   ]
 }

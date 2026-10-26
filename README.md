@@ -116,6 +116,25 @@ Exit codes: `0` ok, `1` error, `2` usage error, `3` payment required, `4` `--wai
 
 ## Use it from Claude or ChatGPT
 
+### Hosted MCP server (nothing to install)
+
+doc2video also runs the MCP server for you at **`https://doc2video.io/mcp`**. Add it as a custom
+connector and sign in with your doc2video account when asked (OAuth — no keys to copy):
+
+- **Claude** (claude.ai, Desktop, mobile): Settings → Connectors → Add custom connector, URL
+  `https://doc2video.io/mcp`.
+- **Claude Code:** `claude mcp add --transport http doc2video https://doc2video.io/mcp`, then run
+  `/mcp` to sign in.
+- **ChatGPT:** add a connector with the server URL `https://doc2video.io/mcp` (developer mode) and
+  OAuth sign-in.
+- **Cursor, VS Code and other clients:** a remote server entry such as
+  `{ "doc2video": { "url": "https://doc2video.io/mcp" } }` (VS Code: `"type": "http"`).
+
+The hosted server has the same tools, but it can't see your computer's files: give it text, public
+links (PDFs, Word and PowerPoint files, photos, web pages), or add files on the project page it
+links to. To work from local folders, use the CLI or `d2v mcp` below. Connected apps are listed,
+and can be disconnected, on your dashboard's API page.
+
 ### Claude Code / Codex CLI (shell)
 
 Both can simply run `d2v`. Open a terminal agent in the folder with your files and ask, e.g.
@@ -172,8 +191,8 @@ env = { DOC2VIDEO_API_KEY = "d2v_xxx" }
 
 With a global install you can use `"command": "d2v", "args": ["mcp"]` instead of `npx`.
 
-**ChatGPT (web/desktop):** ChatGPT connects only to *remote* MCP servers over HTTPS, so it can't
-run this local server or read your folders. Use Codex CLI for local folders.
+**ChatGPT (web/desktop):** ChatGPT connects only to *remote* MCP servers, so use the hosted server
+above. Use Codex CLI for local folders.
 
 ## REST API
 

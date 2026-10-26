@@ -116,6 +116,22 @@ test("a local photo path is uploaded before being assigned", async () => {
   assert.ok(patch.body.photo.document_id);
 });
 
+test("public links are added by the server alongside local files", async () => {
+  const { code, data, stderr } = await d2v("add", projectId, "https://example.com/menu.pdf", "http://private.example/x.pdf");
+  assert.equal(code, 0, stderr);
+  assert.equal(data.upload.uploaded.at(-1).filename, "menu.pdf");
+  assert.equal(data.upload.failed[0].path, "http://private.example/x.pdf");
+  const imported = mock.state.requests.filter((r) => r.path.endsWith("/documents/from-url")).map((r) => r.body.url);
+  assert.deepEqual(imported, ["https://example.com/menu.pdf", "http://private.example/x.pdf"]);
+  // A photo link can be assigned to a scene directly
+  const photo = await d2v("scene", projectId, "3", "--photo", "https://example.com/shop.jpg", "--no-regen");
+  assert.equal(photo.code, 0, photo.stderr);
+  const patch = mock.state.requests.filter((r) => r.method === "PATCH").at(-1);
+  assert.ok(patch.body.photo.document_id);
+  const notPhoto = await d2v("scene", projectId, "3", "--photo", "https://example.com/menu2.pdf", "--no-regen");
+  assert.notEqual(notPhoto.code, 0);
+});
+
 test("produce without a purchase exits 3 with guidance", async () => {
   const { code, data } = await d2v("produce", projectId);
   assert.equal(code, 3);
@@ -337,6 +353,15 @@ test("MCP asks for consent before spending credits", async () => {
 
     const paid = await client.callTool({ name: "d2v_build_storyboard", arguments: { project: projectId, force: true, use_credits: true } });
     assert.notEqual(paid.isError, true);
+
+    // Unlocking needs the agreed price, and a higher price is refused rather than charged
+    const noPrice = await client.callTool({ name: "d2v_unlock_with_credits", arguments: { project: projectId } });
+    assert.equal(noPrice.isError, true);
+    const before = mock.state.balanceCents;
+    const tooLow = await client.callTool({ name: "d2v_unlock_with_credits", arguments: { project: projectId, max_credits_cents: 199 } });
+    assert.equal(tooLow.isError, true);
+    assert.match(tooLow.content[0].text, /max_credits_cents: 299/);
+    assert.equal(mock.state.balanceCents, before);
   } finally {
     mock.state.creditsMode = null;
     await client.close();

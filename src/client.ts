@@ -178,6 +178,12 @@ export class Doc2VideoClient {
     return document;
   }
 
+  /** Add a source from a public link (a document, photo or web page); the server fetches it. */
+  async importUrl(projectId: string, url: string): Promise<DocumentInfo> {
+    const { document } = await this.request<{ document: DocumentInfo }>("POST", `/projects/${projectId}/documents/from-url`, { url });
+    return document;
+  }
+
   deleteDocument(projectId: string, documentId: string) {
     return this.request<{ deleted: true }>("DELETE", `/projects/${projectId}/documents/${documentId}`);
   }
@@ -272,10 +278,12 @@ export class Doc2VideoClient {
     return this.request<{ checkout_url: string; amount_cents: number }>("POST", "/credits/checkout", { amount_cents: amountCents });
   }
 
-  unlockWithCredits(projectId: string) {
+  /** `maxCreditsCents`: the price agreed to; if it's higher now, nothing is charged (402 credits_confirm_required). */
+  unlockWithCredits(projectId: string, maxCreditsCents?: number) {
     return this.request<{ unlocked: true; amount_cents: number; balance_cents: number }>(
       "POST",
       `/projects/${projectId}/unlock-with-credits`,
+      maxCreditsCents !== undefined ? { max_credits_cents: maxCreditsCents } : undefined,
     );
   }
 

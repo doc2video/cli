@@ -33,6 +33,29 @@ rate-limited per IP.
 
 Or create a key by hand on the dashboard's **API** page (`/dashboard/api-keys`).
 
+### Hosted MCP server and OAuth
+
+`https://doc2video.io/mcp` is a remote MCP server (Streamable HTTP, stateless, JSON responses) with
+the same tools as `d2v mcp`, except that sources come as text or public links instead of local
+files, and the final video is a download link. Apps connect with OAuth 2.1, so users sign in and
+approve instead of handling keys:
+
+- Protected resource metadata (RFC 9728): `/.well-known/oauth-protected-resource/mcp`. An
+  unauthenticated request to `/mcp` gets a 401 whose `WWW-Authenticate` header points there.
+- Authorization server metadata (RFC 8414): `/.well-known/oauth-authorization-server`
+  (issuer `https://doc2video.io`).
+- Authorization code flow with PKCE (S256 only) and resource indicators (RFC 8707: the resource
+  is `https://doc2video.io/mcp`). Clients identify themselves with a Client ID Metadata Document
+  URL, or register at `/oauth/register` (RFC 7591). Redirect URIs must be https, loopback
+  (`http://localhost` / `http://127.0.0.1`, any port) or an app URL scheme.
+- Access tokens last an hour; refresh tokens last 60 days and work once (each refresh returns a
+  new one). Reusing an old refresh token ends the connection. Revoke at `/oauth/revoke`
+  (RFC 7009).
+- Access tokens only work at `/mcp`, not on this REST API. `/mcp` also accepts an API key
+  (`Authorization: Bearer d2v_…`) for clients configured with a fixed header.
+
+Users see and disconnect their connected apps on the dashboard's API page.
+
 ## Conventions
 
 - JSON in, JSON out. Field names match the database (`snake_case`).
@@ -124,6 +147,7 @@ Project `status`: `draft → scripting → reviewing ↔ generating → producin
 | `GET /projects/:id/documents` | `{ documents }` |
 | `POST /projects/:id/documents/upload-url` | `{ filename, content_type?, size_bytes? }` → `{ upload_url, storage_path, content_type, method: "PUT", expires_in_seconds }`. PUT the bytes to `upload_url` with that `Content-Type`. |
 | `POST /projects/:id/documents` | Register an upload `{ storage_path, filename, content_type?, size_bytes? }`, **or** add text `{ content, filename?, replace? }`. 201 `{ document }`. |
+| `POST /projects/:id/documents/from-url` | `{ url }` → 201 `{ document }`. Adds a source from a public link: a document or photo is stored like an upload (up to 25 MB); a web page's readable text becomes a text source. Links that need a sign-in, private addresses and non-standard ports are refused (422 `url_fetch_failed`, 413 when too large, 415 `unsupported_file_type`). 30 per minute per user. |
 | `DELETE /projects/:id/documents/:documentId` | Remove a source |
 | `POST /projects/:id/draft` | `{ prompt, save? = true }` → `{ draft, document }`. AI-writes the source content. |
 | `POST /projects/:id/creative-direction` | `{ preferences?, save? = false }` → `{ creative_direction, saved }` |
@@ -292,6 +316,6 @@ X-D2V-Client: my-integration/1.2
 X-D2V-Ref: partner-name
 ```
 
-The `d2v` package sends `cli/<version>` or `mcp/<version>; agent=<MCP client name>`, plus
+The hosted MCP server's calls are tagged `mcp/remote; agent=<connected app>`. The `d2v` package sends `cli/<version>` or `mcp/<version>; agent=<MCP client name>`, plus
 `X-D2V-Ref` when `DOC2VIDEO_REF` is set in its environment (directory listings set this in their
 install config).

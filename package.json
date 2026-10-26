@@ -1,6 +1,6 @@
 {
   "name": "doc2video",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "mcpName": "io.github.doc2video/d2v",
   "description": "CLI and MCP server for doc2video — turn a folder of documents and photos into an AI-produced video, steered from your terminal or by Claude / ChatGPT Codex.",
   "keywords": [

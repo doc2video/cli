@@ -221,12 +221,12 @@ export async function startMcpServer(cfg: ResolvedConfig): Promise<void> {
   register("d2v_create_project", {
     title: "Create project",
     description:
-      "Create a video project from local files and folders (uploaded from this machine), written text, or an AI draft prompt. " +
+      "Create a video project from local files and folders (uploaded from this machine), public links, written text, or an AI draft prompt. " +
       "Photos (jpg/png/webp/heic) are featured in scenes; documents (pdf/docx/pptx/md/txt/csv/json) supply the story. " +
       "Set build: true to start generating the storyboard right away (then poll d2v_wait).",
     inputSchema: {
       name: z.string().min(1).describe("Project name"),
-      sources: z.array(z.string()).optional().describe("Absolute paths of local files or folders to upload"),
+      sources: z.array(z.string()).optional().describe("Absolute paths of local files or folders to upload, or public http(s) links to documents, photos or web pages"),
       text: z.string().optional().describe("Written content to use as a source"),
       draft_prompt: z.string().optional().describe("Have AI write the source content from this description"),
       build: z.boolean().optional().describe("Start the storyboard pipeline immediately (default false)"),
@@ -247,10 +247,10 @@ export async function startMcpServer(cfg: ResolvedConfig): Promise<void> {
 
   register("d2v_add_sources", {
     title: "Add sources",
-    description: "Upload more local files/folders or add written content to a project. Rebuild the storyboard afterwards for them to take effect.",
+    description: "Upload more local files/folders, add public links, or add written content to a project. Rebuild the storyboard afterwards for them to take effect.",
     inputSchema: {
       project,
-      sources: z.array(z.string()).optional().describe("Absolute paths of local files or folders"),
+      sources: z.array(z.string()).optional().describe("Absolute paths of local files or folders, or public http(s) links"),
       text: z.string().optional().describe("Written content to add"),
     },
     annotations: write,
@@ -387,7 +387,7 @@ export async function startMcpServer(cfg: ResolvedConfig): Promise<void> {
     title: "Update scene",
     description:
       "Edit one scene: title, narration text (re-voice with d2v_update_narration), visual engine, approval, or photo. " +
-      "photo accepts a project photo's filename, a document id, an absolute local file path (uploaded), or \"none\" for an AI visual. " +
+      "photo accepts a project photo's filename, a document id, an absolute local file path (uploaded), a public link to a photo, or \"none\" for an AI visual. " +
       "A photo change regenerates the keyframe unless regenerate_keyframe is false.",
     inputSchema: {
       project,
@@ -500,9 +500,16 @@ export async function startMcpServer(cfg: ResolvedConfig): Promise<void> {
   register("d2v_unlock_with_credits", {
     title: "Unlock with credits",
     description: "Unlock a project (AI clips, final assembly, download) by paying its price from the user's credits. Only when the user asks; show d2v_estimate_cost first.",
-    inputSchema: { project },
-    annotations: write,
-  }, async (a) => json(await client.unlockWithCredits(await resolve(a.project))));
+    inputSchema: {
+      project,
+      max_credits_cents: z
+        .number()
+        .int()
+        .min(0)
+        .describe("The price the user agreed to, in cents (amount_cents from d2v_estimate_cost). If the price is higher now, nothing is charged and you're asked again."),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
+  }, async (a) => json(await client.unlockWithCredits(await resolve(a.project), a.max_credits_cents)));
 
   register("d2v_redeem_promo_code", {
     title: "Redeem promo code",
