@@ -1,0 +1,15 @@
+{
+  "name": "doc2video",
+  "description": "Turn documents and photos into narrated AI videos. Create projects, build and edit storyboards, and produce the final video from Cursor or any MCP client.",
+  "author": { "name": "The doc2video team", "email": "support@doc2video.io" },
+  "homepage": "https://doc2video.io",
+  "repository": "https://github.com/doc2video/cli",
+  "license": "MIT",
+  "keywords": ["video", "ai-video", "text-to-video", "storyboard", "narration", "documents", "photos", "mcp"],
+  "logo": "assets/logo.png",
+  "mcpServers": "mcp.json",
+  "agents": [],
+  "skills": [],
+  "rules": [],
+  "commands": []
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "doc2video": {
+      "command": "npx",
+      "args": ["-y", "doc2video", "mcp"]
+    }
+  }
+}
